@@ -1,0 +1,9 @@
+build
+setuptools
+loguru
+python-dotenv
+tqdm
+typing_extensions
+azure-ai-formrecognizer
+# azure-storage-blob==12.18.0
+# azure-search-documents==11.4.0b8
