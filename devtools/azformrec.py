@@ -2,18 +2,20 @@ from copy import deepcopy
 from typing import Tuple, Union
 from typing_extensions import Self
 from azure.core.credentials import AzureKeyCredential
-from azure.ai.formrecognizer import DocumentAnalysisClient
 from typing import List
 from azure.ai.formrecognizer import (
     AnalyzeResult,
     DocumentPage,
     DocumentParagraph,
     DocumentTable,
+    DocumentAnalysisClient,
 )
 
-from aztextproc import split_text, table_to_html
+from aztextproc import table_to_html
 from tqdm import tqdm
-from utils import load_json, time_benchmark_dec, write_json
+
+from misc.io import load_json, write_json
+from misc.decorator import time_benchmark_decorator
 
 
 class EnhancePage:
@@ -81,6 +83,24 @@ class EnhancePage:
             pass
 
         return packed_pages
+
+    def get_non_overlap_paragraph(self) -> List[DocumentParagraph]:
+        paragraph_buffer = deepcopy(self.paragraphs)
+        for _, table in enumerate(self.tables):
+            for span in table.spans:
+                for p_idx, p in enumerate(paragraph_buffer):
+                    if p.spans[0].offset in range(
+                        span.offset, span.offset + span.length + 1
+                    ):
+                        paragraph_buffer[p_idx] = None
+                        pass
+                    pass
+
+                # Filter out the None element
+                paragraph_buffer = [p for p in paragraph_buffer if p is not None]
+                pass
+
+        return paragraph_buffer
 
     def to_plain_text(self):
         # Remove all the paragraphs that overlap with the table
@@ -178,7 +198,7 @@ class AzureDocumentTool:
         pass
 
     @staticmethod
-    @time_benchmark_dec("azformrec.AzureDocumentTool.run_form_recognizer", True)
+    @time_benchmark_decorator("azformrec.AzureDocumentTool.run_form_recognizer", True)
     def run_form_recognizer(
         filename: str,
         endpoint: str,

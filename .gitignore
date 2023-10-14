@@ -1,6 +1,9 @@
 # Personal files
 .DS_Store
 dataset/
+notebooks/*.png
+notebooks/*.ttf
+notebooks/*.json
 
 
 # Byte-compiled / optimized / DLL files
